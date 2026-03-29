@@ -1,16 +1,16 @@
 // ========================================
-// Boratime — Firebase Auth + Firestore Init
+// scoreplace.app — Firebase Auth + Firestore Init
 // ========================================
-// Project: boratime26 (Firebase Console)
+// Project: scoreplace-app (Firebase Console)
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCur5KnhAGpcdu-5dwCoEtGmfFMMovCpxg",
-  authDomain: "boratime26.firebaseapp.com",
-  projectId: "boratime26",
-  storageBucket: "boratime26.firebasestorage.app",
-  messagingSenderId: "278864994242",
-  appId: "1:278864994242:web:052208a3d8d8ecb818405b",
-  measurementId: "G-Q622TQZ43W"
+  apiKey: "AIzaSyB7AyOojV_Pm50Kr7bovVY4jVTTNbKOK0A",
+  authDomain: "scoreplace-app.firebaseapp.com",
+  projectId: "scoreplace-app",
+  storageBucket: "scoreplace-app.firebasestorage.app",
+  messagingSenderId: "382268772878",
+  appId: "1:382268772878:web:7c164933f3beacba4be25f",
+  measurementId: "G-PZ25D36JSV"
 };
 
 // Initialize Firebase + Firestore
@@ -58,7 +58,7 @@ function handleGoogleLogin() {
     simulateLoginSuccess({
       uid: 'local_user',
       displayName: 'Organizador Teste',
-      email: 'organizador@torneio.facil',
+      email: 'organizador@scoreplace.app',
       photoURL: 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix'
     });
     return;
@@ -164,6 +164,48 @@ async function simulateLoginSuccess(user) {
   var modal = document.getElementById('modal-login');
   if (modal) modal.classList.remove('active');
 
+  // Auto-enroll if there was a pending enrollment
+  var pendingEnrollId = window._pendingEnrollTournamentId || null;
+  try {
+    if (!pendingEnrollId) pendingEnrollId = sessionStorage.getItem('_pendingEnrollTournamentId');
+  } catch(e) {}
+
+  if (pendingEnrollId) {
+    window._pendingEnrollTournamentId = null;
+    try { sessionStorage.removeItem('_pendingEnrollTournamentId'); } catch(e) {}
+
+    // Wait a tick for tournaments to be loaded, then enroll
+    setTimeout(function() {
+      var t = window.AppStore.tournaments.find(function(tour) { return String(tour.id) === String(pendingEnrollId); });
+      if (t && window.AppStore.currentUser) {
+        var arr = Array.isArray(t.participants) ? t.participants : (t.participants ? Object.values(t.participants) : []);
+        var already = arr.some(function(p) {
+          var str = typeof p === 'string' ? p : (p.email || p.displayName);
+          return str && (str.includes(window.AppStore.currentUser.email) || str.includes(window.AppStore.currentUser.displayName));
+        });
+        if (!already) {
+          arr.push({ name: window.AppStore.currentUser.displayName, email: window.AppStore.currentUser.email, displayName: window.AppStore.currentUser.displayName });
+          t.participants = arr;
+          if (typeof window.AppStore.sync === 'function') window.AppStore.sync();
+          if (typeof showNotification !== 'undefined') {
+            showNotification('Inscrito!', 'Voc\u00EA foi inscrito automaticamente no torneio "' + t.name + '".', 'success');
+          }
+        }
+      }
+      // Navigate to tournament page
+      window.location.hash = '#tournaments/' + pendingEnrollId;
+      if (typeof initRouter === 'function') initRouter();
+    }, 300);
+    return;
+  }
+
+  // Redirect to pending invite tournament if there was one
+  if (window._pendingInviteHash) {
+    var dest = window._pendingInviteHash;
+    window._pendingInviteHash = null;
+    window.location.hash = dest;
+  }
+
   // Initialize router to load appropriate views
   if (typeof initRouter === 'function') initRouter();
 }
@@ -173,7 +215,7 @@ function setupLoginModal() {
     var modalHtml = '<div class="modal-overlay" id="modal-login">' +
       '<div class="modal" style="max-width: 400px;">' +
         '<div class="modal-header">' +
-          '<h2 class="card-title">Acessar Boratime</h2>' +
+          '<h2 class="card-title">Acessar scoreplace.app</h2>' +
           '<button class="modal-close" onclick="document.getElementById(\'modal-login\').classList.remove(\'active\')">&times;</button>' +
         '</div>' +
         '<div class="modal-body">' +

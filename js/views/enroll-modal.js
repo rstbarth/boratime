@@ -23,7 +23,7 @@ function setupEnrollModal() {
             <p class="text-muted mb-3"><strong>Organização:</strong> Convide jogadores enviando o link público do torneio.</p>
             
             <div class="form-group d-flex" style="gap: 5px;">
-               <input type="text" readonly class="form-control" value="https://torneio.facil/t/copa-verao" style="flex:1;" id="share-link-input">
+               <input type="text" readonly class="form-control" value="https://scoreplace.app/#tournaments/" style="flex:1;" id="share-link-input">
                <button class="btn btn-secondary" onclick="
                   const i = document.getElementById('share-link-input');
                   i.select();
